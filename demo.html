@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block header_content %}
+
+{% include 'header_content.html' %}
+
+{% endblock %}
+
+{% block form %}
+
+<div class="container">
+  <div class="page-header">
+    <h2 id="userImages">Try CloudCV VQA On Your Images</h2>
+  </div>
+
+  <form id="fileupload" method="post" action="." enctype="multipart/form-data">
+
+  {% include 'form.html' %}
+
+  {% include 'jquery_file_upload.html' %}
+
+  </form>
+  <div class="fileupload-content">
+    <table class="files"></table>
+    <div class="fileupload-progressbar"></div>
+  </div>
+  <br>
+</div>
+
+{% endblock %}
+
+<script>
+  var socketid;
+  var demo_running=0;
+
+</script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
+<script src="http://cloudcv.org/static/js/vendor/jquery.ui.widget.js"></script>
+<!-- The Templates plugin is included to render the upload/download listings -->
+<script src="http://cloudcv.org/static/js/tmpl.min.js"></script>
+<!-- The Load Image plugin is included for the preview images and image resizing functionality -->
+<script src="http://cloudcv.org/static/js/load-image.min.js"></script>
+<!-- The Canvas to Blob plugin is included for image resizing functionality -->
+<script src="http://cloudcv.org/static/js/canvas-to-blob.min.js"></script>
+<!-- Bootstrap JS is not required, but included for the responsive demo navigation -->
+<script src="http://cloudcv.org/static/js/bootstrap.min.js"></script>
+<!-- blueimp Gallery script -->
+<script src="http://cloudcv.org/static/js/jquery.blueimp-gallery.min.js"></script>
+<!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
+<script src="http://cloudcv.org/static/js/jquery.iframe-transport.js"></script>
+<!-- The basic File Upload plugin -->
+<script src="http://cloudcv.org/static/js/jquery.fileupload.js"></script>
+<!-- The File Upload processing plugin -->
+<script src="http://cloudcv.org/static/js/jquery.fileupload-process.js"></script>
+<!-- The File Upload image preview & resize plugin -->
+<script src="http://cloudcv.org/static/js/jquery.fileupload-image.js"></script>
+<!-- The File Upload audio preview plugin -->
+<script src="http://cloudcv.org/static/js/jquery.fileupload-audio.js"></script>
+<!-- The File Upload video preview plugin -->
+<script src="http://cloudcv.org/static/js/jquery.fileupload-video.js"></script>
+<!-- The File Upload validation plugin -->
+<script src="http://cloudcv.org/static/js/jquery.fileupload-validate.js"></script>
+<!-- The File Upload user interface plugin -->
+<script src="http://cloudcv.org/static/js/jquery.fileupload-ui.js"></script>
+<!-- The main application script -->
+<script src="http://cloudcv.org/static/js/main.js"></script>
+<script src="http://cloudcv.org/static/js/locale.js"></script>
+<script src="http://cloudcv.org/static/js/csrf.js"></script>
+<!-- The XDomainRequest Transport is included for cross-domain file deletion for IE8+ -->
+<!--[if gte IE 8]>
+<script src="http://cloudcv.org/static/js/cors/jquery.xdr-transport.js"></script>
+
+<![endif]-->
+<script src="/node/socket.io/socket.io.js"></script>
+<link rel="import" href="http://cloudcv.org/static/bower_components/webcomponentsjs/src/voice-player.html">
+<link rel="import" href="http://cloudcv.org/static/bower_components/webcomponentsjs/src/voice-recognition.html">
+<script>
+    var password = "";
+        // Opera 8.0+
+    var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+        // Firefox 1.0+
+    var isFirefox = typeof InstallTrigger !== 'undefined';
+        // At least Safari 3+: "[object HTMLElementConstructor]"
+    var isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+        // Internet Explorer 6-11
+    var isIE = /*@cc_on!@*/false || !!document.documentMode;
+        // Edge 20+
+    var isEdge = !isIE && !!window.StyleMedia;
+        // Chrome 1+
+    var isChrome = !!window.chrome && !!window.chrome.webstore;
+        // Blink engine detection
+    var isBlink = (isChrome || isOpera) && !!window.CSS;
+
+    var getUrlParameter = function getUrlParameter(sParam) {
+        var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+            sURLVariables = sPageURL.split('&'),
+            sParameterName,
+            i;
+
+        for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
+
+            if (sParameterName[0] === sParam) {
+                return sParameterName[1] === undefined ? true : sParameterName[1];
+            }
+        }
+    };
+
+    var tech = getUrlParameter('useVoice');
+    var isListen = getUrlParameter('listenAnswer');
+
+    if(tech) {
+        tech = parseInt(tech);
+    }
+    if(isListen) {
+        isListen = parseInt(isListen);
+    }
+    $(document).ready(function()
+    {
+	
+        var host = location.origin;
+        console.log(host);
+        
+	var socket = io.connect(host,{transports: ["websocket"]});
+
+        socket.on('connect', function(){
+            console.log("connect");
+        });
+
+        $('.demo_img').each(function(){
+            var width = $(this).width();
+            console.log(width);
+            $(this).css("height", width * 0.7);
+        });
+
+        $(window).on('resize', function(){
+        $('.demo_img').each(function(){
+            var width = $(this).width();
+            console.log(width);
+            $(this).css("height", width * 0.7);
+        });
+        });
+
+        socket.on('message', function(message)
+        {
+            if(message.socketid)
+            {
+		            console.log("socketid recieved: " + message.socketid);
+                document.getElementById('socketid').value= message.socketid.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                socketid = document.getElementById('socketid').value
+            }
+            if(message.visit)
+            {
+                $('#statcounter').append('<p>' + message.visit );
+                console.log(message.visit);
+            }
+            if(message.name)
+            {
+                console.log(message.name);
+                $('#comments').prepend('<li>' + message.name + '</li>');
+            }
+            if(message.web_result)
+            {
+                webResult = JSON.parse(message.web_result);
+                console.log(webResult);
+                processResult(webResult);
+            }
+        });
+    });
+
+</script>
+
+</body>
+</html>

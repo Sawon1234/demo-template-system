@@ -1,0 +1,33 @@
+<div class="fileupload-buttonbar">
+  <div class="span7">
+    <span class="btn btn-primary fileinput-button">
+      <i class="icon-plus icon-white"></i>
+      <span>Add files...</span>
+      <input type="file" name="file" multiple>
+    </span>
+    <button type="button" class="btn btn-danger delete" id="deleteButton" style="display:none;">
+        <i class="icon-trash icon-white"></i>
+        <span>Delete All Files</span>
+    </button>
+        <!--Select All Files<input type="checkbox" class="toggle">-->
+        <button type="reset" class="btn btn-warning cancel" id="cancelButton" style="display:none;">
+            <i class="icon-ban-circle icon-white"></i>
+            <span>Cancel upload</span>
+        </button>
+  </div>
+  <div class="span5 fileupload-progress fade">
+    <div class="progress progress-success progres-striped active">
+      <div class="bar" style="width:0%"></div>
+    </div>
+    <div class="progress-extended">&nbsp;</div>
+  </div>
+</div>
+
+<div id="dropArea" style="height:100px;border-style:dashed;">
+    <h3 style="text-align: center;padding-bottom: 15px; padding-top: 15px"> You can also drag and drop images here </h3>
+</div>
+
+<div class="fileupload-loading"></div>
+  <table class="table table-striped">
+    <tbody class="files" data-toggle="modal-gallery" data-target="#modal-gallery"></tbody>  
+  </table>
